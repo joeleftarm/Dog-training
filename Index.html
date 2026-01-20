@@ -1,15 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ali's Training Camp</title>
+    <!-- Tailwind for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body>
+    <!-- React & Babel for running JSX in the browser -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-50">
     <div id="root"></div>
-    <!-- This line is the key pass to the React code -->
-    <script type="module" src="/main.jsx"></script>
-  </body>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        
+        // --- Copy the logic from our previous session here ---
+        // (I have simplified the icon usage for this browser-direct version)
+
+        const Icon = ({ name, className }) => {
+            const [iconHtml, setIconHtml] = useState('');
+            useEffect(() => {
+                if (window.lucide) {
+                    const icon = lucide.createIcons();
+                }
+            }, []);
+            return <i data-lucide={name} className={className}></i>;
+        };
+
+        const trainingModules = [
+          {
+            id: 'foundation',
+            title: 'Pre-Season: The Basics',
+            icon: 'trophy',
+            description: 'Building focus before the big games.',
+            drills: [
+              { id: 'eye_contact', title: 'The Captain\'s Watch', desc: 'Eye contact drills.', steps: ['Stand still.', 'Wait for look.', 'Reward.'], tips: 'Wait for it.', completed: false },
+              { id: 'touch', title: 'Hand Targeting', desc: 'Nose to hand.', steps: ['Flat hand.', 'Touch.', 'Mark/Treat.'], tips: 'Great for redirection.', completed: false }
+            ]
+          },
+          {
+            id: 'reactivity',
+            title: 'Zone Defense: Reactivity',
+            icon: 'alert-triangle',
+            description: 'Managing barking and chasing.',
+            drills: [
+              { id: 'engage', title: 'The Check-In', desc: 'Look at dog, then look at you.', steps: ['Find distance.', 'Mark when she looks at dog.', 'Treat when she looks at you.'], tips: 'If she barks, you are offside.', completed: false },
+              { id: 'find_it', title: 'Scatter Ball', desc: 'Treats on floor.', steps: ['Say "Find it!"', 'Drop treats.', 'Move away.'], tips: 'Use for quick distractions.', completed: false }
+            ]
+          }
+          // Note: You can add the rest of the drills here following this pattern
+        ];
+
+        function App() {
+            const [modules, setModules] = useState(() => {
+                const saved = localStorage.getItem('aliTrainingData');
+                return saved ? JSON.parse(saved) : trainingModules;
+            });
+
+            useEffect(() => {
+                localStorage.setItem('aliTrainingData', JSON.stringify(modules));
+                if (window.lucide) lucide.createIcons();
+            }, [modules]);
+
+            const toggleDrill = (drillId) => {
+                setModules(prev => prev.map(mod => ({
+                    ...mod,
+                    drills: mod.drills.map(d => d.id === drillId ? {...d, completed: !d.completed} : d)
+                })));
+            };
+
+            const completedCount = modules.reduce((acc, mod) => acc + mod.drills.filter(d => d.completed).length, 0);
+            const totalCount = modules.reduce((acc, mod) => acc + mod.drills.length, 0);
+
+            return (
+                <div className="min-h-screen pb-10">
+                    <header className="bg-blue-900 text-white p-6 shadow-lg mb-6">
+                        <div className="max-w-xl mx-auto flex items-center gap-3">
+                            <h1 className="text-2xl font-bold">Ali's Training Camp</h1>
+                        </div>
+                    </header>
+                    <main className="max-w-xl mx-auto px-4">
+                        <div className="bg-white p-4 rounded-xl shadow mb-6">
+                            <h2 className="font-bold mb-2">Match Fitness: {Math.round((completedCount/totalCount)*100)}%</h2>
+                            <div className="w-full bg-gray-200 h-4 rounded-full">
+                                <div className="bg-green-500 h-4 rounded-full transition-all" style={{width: `${(completedCount/totalCount)*100}%`}}></div>
+                            </div>
+                        </div>
+                        {modules.map(mod => (
+                            <div key={mod.id} className="mb-4 bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+                                <div className="p-4 bg-slate-50 border-b flex items-center gap-2">
+                                    <Icon name={mod.icon} className="w-5 h-5 text-blue-600" />
+                                    <h3 className="font-bold">{mod.title}</h3>
+                                </div>
+                                <div className="p-2">
+                                    {mod.drills.map(drill => (
+                                        <div key={drill.id} className="flex items-center justify-between p-3 border-b last:border-0">
+                                            <div className="flex items-center gap-3">
+                                                <button onClick={() => toggleDrill(drill.id)}>
+                                                    <Icon name={drill.completed ? 'check-circle' : 'circle'} className={drill.completed ? 'text-green-500' : 'text-gray-300'} />
+                                                </button>
+                                                <span className={drill.completed ? 'line-through text-gray-400' : 'font-medium'}>{drill.title}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </main>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
 </html>
 
